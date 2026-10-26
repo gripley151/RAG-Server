@@ -23,7 +23,12 @@ TOP_K = 4
 # building the LLM's context -- without this, a fixed top-k forces in
 # irrelevant chunks whenever the index holds unrelated documents, which both
 # mislabels them as "sources" and confuses the model into under-answering.
-MIN_ASK_SCORE = 0.3
+# bge-small's cosine scores run higher/more compressed than MiniLM's for
+# unrelated text (observed: ~0.42-0.53 for clearly unrelated docs, vs. 0.78
+# for the actually-relevant one), so this floor had to be recalibrated when
+# the embedding model was swapped -- 0.3 (tuned for MiniLM) no longer
+# filtered anything out under bge-small.
+MIN_ASK_SCORE = 0.6
 
 # Where to reach the language model. Inside docker compose this is the
 # "ollama" service name; set OLLAMA_URL to override for local/non-Docker runs.
@@ -31,9 +36,16 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:1b")
 
 
-# Load a small, fast embedding model (downloads once, ~90 MB).
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+# Embedding model, deliberately chosen off the MTEB leaderboard: bge-small
+# scores noticeably higher than MiniLM on retrieval benchmarks specifically
+# (not just general similarity), while staying in the same small/CPU-fast
+# size class (~130 MB, 384-dim), so there's no Docker/runtime cost to the
+# swap. The one catch is that bge models expect an instruction prefix on
+# the QUERY side only -- see BGE_QUERY_PREFIX below -- passages/documents
+# are embedded as-is.
+model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 tokenizer = model.tokenizer
+BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 # Our "database": just a Python list held in memory.
 # Each item looks like: {"text": "...", "embedding": <vector>}
@@ -110,8 +122,10 @@ def retrieve(query: str, top_k: int = TOP_K):
     if not documents:
         return []
 
-    # embed the search text
-    query_embedding = model.encode(query)
+    # embed the search text (bge-small wants the query-side instruction
+    # prefix; documents in /add are embedded without it, per the model's
+    # own convention)
+    query_embedding = model.encode(BGE_QUERY_PREFIX + query)
 
     # run similarity against every stored chunk -> shape (num_docs,)
     doc_embeddings = np.stack([doc["embedding"] for doc in documents])

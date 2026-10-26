@@ -225,9 +225,17 @@ python user_testing.py
 
 ## Design notes
 
-- Embedding model: `sentence-transformers/all-MiniLM-L6-v2` — small, fast,
-  good enough at this scale. Baked into the Docker image at build time so
-  `/add` has no first-request download delay.
+- Embedding model: `BAAI/bge-small-en-v1.5`, chosen deliberately off the
+  MTEB leaderboard rather than left at the starter code's default
+  (`all-MiniLM-L6-v2`). It scores noticeably higher than MiniLM on the
+  leaderboard's retrieval benchmarks specifically, while staying the same
+  size class (~130 MB, 384-dim) — same CPU/Docker cost, better-tuned for
+  exactly what this server needs (ranking passages against a query). The
+  one implementation detail that comes with it: bge models expect an
+  instruction prefix ("Represent this sentence for searching relevant
+  passages: ") on the query side only, not on stored documents — handled
+  in `retrieve()`. Baked into the Docker image at build time so `/add` has
+  no first-request download delay.
 - Chunking: 1000-token chunks with 200-token overlap, so a sentence that
   falls on a chunk boundary still appears intact in at least one chunk.
 - Retrieval: cosine similarity over an in-memory list (`TOP_K = 4` for
