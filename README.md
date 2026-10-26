@@ -226,6 +226,9 @@ It also honors `BASE_URL`, so the same tool can be pointed at the
 Cloudflare tunnel to test the public endpoint by hand:
 
 ```
+# bash/macOS/Linux
+BASE_URL=https://your-tunnel.trycloudflare.com python user_testing.py
+
 # PowerShell
 $env:BASE_URL = "https://your-tunnel.trycloudflare.com"
 python user_testing.py
