@@ -160,10 +160,17 @@ PASS  POST /search after /clear returns no results
 ```
 
 It can also point at the public tunnel instead of localhost, to prove the
-internet-facing server works, not just the local one:
+internet-facing server works, not just the local one. `client.py`,
+`load_squad.py`, `test_document.py`, and `user_testing.py` all honor this
+the same way:
 
 ```
+# bash/macOS/Linux
 BASE_URL=https://your-tunnel.trycloudflare.com python test_endpoints.py
+
+# PowerShell
+$env:BASE_URL = "https://your-tunnel.trycloudflare.com"
+python test_endpoints.py
 ```
 
 `client.py` runs the birds/penguins demo above end-to-end against a running
@@ -219,7 +226,8 @@ It also honors `BASE_URL`, so the same tool can be pointed at the
 Cloudflare tunnel to test the public endpoint by hand:
 
 ```
-set BASE_URL=https://your-tunnel.trycloudflare.com
+# PowerShell
+$env:BASE_URL = "https://your-tunnel.trycloudflare.com"
 python user_testing.py
 ```
 
