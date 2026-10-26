@@ -82,7 +82,7 @@ curl -X POST http://localhost:8000/search \
 ```
 
 ```json
-{"query":"How tall can a penguin get?","results":[{"text":"penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.","score":0.7241,"source":"Penguin facts"}]}
+{"query":"How tall can a penguin get?","results":[{"text":"penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.","score":0.78,"source":"Penguin facts"},{"text":"birds are warm - blooded animals with feathers, and most of them can fly.","score":0.5292,"source":"Bird facts"}]}
 ```
 
 ### `POST /ask` — get an answer, grounded in the retrieved chunks
@@ -98,11 +98,12 @@ curl -X POST http://localhost:8000/ask \
   "query": "How tall can a penguin get?",
   "answer": "According to the context, an emperor penguin can stand over a metre tall.",
   "sources": [
-    {"text": "penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.", "score": 0.7241, "source": "Penguin facts"},
-    {"text": "birds are warm - blooded animals with feathers, and most of them can fly.", "score": 0.3011, "source": "Bird facts"}
+    {"text": "penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.", "score": 0.78, "source": "Penguin facts"}
   ]
 }
 ```
+
+(The bird-facts chunk shows up in `/search` above since that endpoint returns raw top-k, but `/ask` filters it out here — its score falls below `MIN_ASK_SCORE`, so it's not relevant enough to use as context for this specific question.)
 
 `/ask` is grounded in the retrieved chunks, not the model's own training data —
 asking something the indexed documents don't cover gets a refusal instead of a
@@ -219,7 +220,7 @@ RAG-Pipe user testing -- talking to http://127.0.0.1:8000
 > ask how tall can a penguin get
   Answer: According to the context, an emperor penguin can stand over a metre tall.
   Sources:
-    1. [0.7443] (Penguin facts) penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.
+    1. [0.7788] (Penguin facts) penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.
 ```
 
 It also honors `BASE_URL`, so the same tool can be pointed at the
