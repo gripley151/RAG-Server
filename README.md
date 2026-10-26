@@ -174,9 +174,10 @@ $env:BASE_URL = "https://your-tunnel.trycloudflare.com"
 python test_endpoints.py
 ```
 
-`client.py` runs the birds/penguins demo above end-to-end against a running
-server, tagging each document with a `source` (`"Bird facts"`, `"Penguin
-facts"`) and printing it alongside each result (`python client.py`). `load_squad.py` downloads a small slice of
+`client.py` runs an end-to-end demo against a running server using two
+short facts about Isaac Asimov's science fiction, tagging each document
+with a `source` (`"I, Robot facts"`, `"Foundation facts"`) and printing it
+alongside each result (`python client.py`). `load_squad.py` downloads a small slice of
 SQuAD (Wikipedia paragraphs paired with real questions and known answers),
 tags each paragraph with a `source` like `"SQuAD: <article title> (paragraph
 N)"`, and checks the server's `/ask` answers against SQuAD's own expected
