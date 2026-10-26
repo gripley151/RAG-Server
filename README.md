@@ -263,15 +263,27 @@ python user_testing.py
 
 ## AI Use Statement
 
-[Fill in: Claude Code was used to help design and implement the `/ask`
-endpoint (retrieval + Ollama integration), including debugging several
-model-behavior issues discovered through live testing against the running
-containers: `/api/generate` vs. `/api/chat` prompting, a fixed-top-k source
-list wrongly including irrelevant documents once the index held unrelated
-text (fixed with a relevance-score floor), answer nondeterminism at default
-temperature (fixed with `temperature: 0`), and an explicit "say you don't
-know" instruction that paradoxically made the model refuse answerable
-questions (fixed by asking it to quote/paraphrase instead). Also used for
-the Dockerfile and docker-compose setup (including the Ollama entrypoint
-script that auto-pulls the model on first start), `test_endpoints.py`, and
-this README. — adjust this to reflect what you actually want to disclose.]
+I used Claude Code throughout this assignment as a coding assistant, and I
+reviewed and tested everything it produced against the running containers
+before accepting it.
+
+- I used it to design and implement the `/ask` endpoint (retrieval plus the
+  Ollama integration), starting from the existing `/add`/`/search` starter
+  code.
+- I used it to debug several model-behavior issues I found through live
+  testing: `/api/generate` vs. `/api/chat` prompting, a fixed-top-k source
+  list that wrongly included irrelevant documents once the index held
+  unrelated text (fixed with a relevance-score floor), answer
+  nondeterminism at default temperature (fixed with `temperature: 0`), and
+  an explicit "say you don't know" instruction that paradoxically made the
+  model refuse answerable questions (fixed by asking it to quote/paraphrase
+  instead). I verified each fix by re-running the test suite and the live
+  containers myself.
+- I used it to write the Dockerfile and docker-compose setup (including the
+  Ollama entrypoint script that auto-pulls the model on first start),
+  `test_endpoints.py`, `test_document.py`, `user_testing.py`, and this
+  README, and I ran all of it against my own containers to confirm the
+  documented behavior matches reality.
+- All architectural decisions (model choice, chunking parameters, the
+  relevance-score floor, temperature setting) were made and verified by me
+  based on observed test results, not accepted blindly from suggestions.
