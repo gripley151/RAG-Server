@@ -6,9 +6,11 @@
 # Then run this file:
 #     python client.py
 
+import os
+
 import requests
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
 
 # Is the server up?
 print(requests.get(f"{BASE_URL}/").json())

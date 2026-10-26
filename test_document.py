@@ -9,9 +9,11 @@
 # Start the server first (see README), then run:
 #     python test_document.py
 
+import os
+
 import requests
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
 
 # ---- The document, as five standalone paragraphs (about metal detectors --
 # chosen because it supports genuinely multi-hop and inference questions,
