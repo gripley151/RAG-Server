@@ -1,5 +1,7 @@
 # RAG-Pipe
 
+**GitHub repository:** https://github.com/gripley151/RAG-Server
+
 A small retrieval-augmented generation (RAG) server. It stores text, finds the
 chunks that match a question, and uses a language model (served locally by
 Ollama) to answer the question from those chunks — returning both the answer
