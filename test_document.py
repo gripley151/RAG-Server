@@ -17,8 +17,8 @@ BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8000")
 
 # ---- The document, as five standalone paragraphs (about metal detectors --
 # chosen because it supports genuinely multi-hop and inference questions,
-# not just more bird facts). Each paragraph is added separately, as the
-# starter client.py does, rather than as one giant /add call. ----
+# not just more Asimov facts). Each paragraph is added separately, as
+# client.py does, rather than as one giant /add call. ----
 
 DOCUMENT = [
     (

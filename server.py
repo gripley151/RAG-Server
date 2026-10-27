@@ -193,11 +193,3 @@ def clear_documents():
     documents.clear()
     return {"message": "cleared"}
 
-
-
-# request = AddRequest(text="pengiuns are 50cm across")
-# add_document(request)
-# request = AddRequest(text="birds are 20cm across")
-# add_document(request)
-# request = SearchRequest(query="how wide are penguins")
-# search(request)

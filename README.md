@@ -68,7 +68,7 @@ original document* it came from. Omit it and chunks are stored with
 ```
 curl -X POST http://localhost:8000/add \
   -H "Content-Type: application/json" \
-  -d '{"text": "Penguins are birds that cannot fly. They swim instead, and an emperor penguin can stand over a metre tall.", "source": "Penguin facts"}'
+  -d '{"text": "In Isaac Asimov'"'"'s I, Robot, robots must obey the Three Laws of Robotics: a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.", "source": "I, Robot facts"}'
 ```
 
 ```json
@@ -80,11 +80,11 @@ curl -X POST http://localhost:8000/add \
 ```
 curl -X POST http://localhost:8000/search \
   -H "Content-Type: application/json" \
-  -d '{"query": "How tall can a penguin get?"}'
+  -d '{"query": "What are the Three Laws of Robotics?"}'
 ```
 
 ```json
-{"query":"How tall can a penguin get?","results":[{"text":"penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.","score":0.78,"source":"Penguin facts"},{"text":"birds are warm - blooded animals with feathers, and most of them can fly.","score":0.5292,"source":"Bird facts"}]}
+{"query":"What are the Three Laws of Robotics?","results":[{"text":"in isaac asimov's i, robot, robots must obey the three laws of robotics : a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.","score":0.8309,"source":"I, Robot facts"},{"text":"in isaac asimov's foundation, the mathematician hari seldon develops psychohistory, a science that predicts the behavior of large populations, and uses it to foresee the collapse of the galactic empire.","score":0.4601,"source":"Foundation facts"}]}
 ```
 
 ### `POST /ask` — get an answer, grounded in the retrieved chunks
@@ -92,20 +92,20 @@ curl -X POST http://localhost:8000/search \
 ```
 curl -X POST http://localhost:8000/ask \
   -H "Content-Type: application/json" \
-  -d '{"query": "How tall can a penguin get?"}'
+  -d '{"query": "What are the Three Laws of Robotics?"}'
 ```
 
 ```json
 {
-  "query": "How tall can a penguin get?",
-  "answer": "According to the context, an emperor penguin can stand over a metre tall.",
+  "query": "What are the Three Laws of Robotics?",
+  "answer": "The Three Laws of Robotics, as stated in Isaac Asimov's I, Robot, are:\n\n1. A robot may not injure a human being or, through inaction, allow a human being to come to harm.\n2. A robot must obey the orders given to it by human beings, except where such orders would conflict with the First Law.\n3. A robot must protect its own existence as long as such protection does not conflict with the First or Second Law.\n\nThese laws prioritize human safety and well-being over robotic autonomy.",
   "sources": [
-    {"text": "penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.", "score": 0.78, "source": "Penguin facts"}
+    {"text": "in isaac asimov's i, robot, robots must obey the three laws of robotics : a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.", "score": 0.8309, "source": "I, Robot facts"}
   ]
 }
 ```
 
-(The bird-facts chunk shows up in `/search` above since that endpoint returns raw top-k, but `/ask` filters it out here — its score falls below `MIN_ASK_SCORE`, so it's not relevant enough to use as context for this specific question.)
+(The Foundation-facts chunk shows up in `/search` above since that endpoint returns raw top-k, but `/ask` filters it out here — its score falls below `MIN_ASK_SCORE`, so it's not relevant enough to use as context for this specific question.)
 
 `/ask` is grounded in the retrieved chunks, not the model's own training data —
 asking something the indexed documents don't cover gets a refusal instead of a
@@ -145,13 +145,13 @@ PASS  POST /add (doc 1) reports 1 total document
 PASS  POST /add (doc 2) reports 2 total documents
 PASS  POST /search returns 200
 PASS  POST /search returns at least one result
-PASS  POST /search's top result is the penguin chunk, not the birds chunk
+PASS  POST /search's top result is the I, Robot chunk, not the general robot chunk
 PASS  POST /search's top result carries its source tag
 PASS  POST /search's top result scores higher than the second
 PASS  POST /ask returns 200
-PASS  POST /ask's answer mentions a correct height (metre/meter)
+PASS  POST /ask's answer mentions the First Law (injure/harm)
 PASS  POST /ask returns non-empty sources
-PASS  POST /ask's top source is the penguin chunk
+PASS  POST /ask's top source is the I, Robot chunk
 PASS  POST /ask doesn't invent an answer when its documents don't contain one
 PASS  POST /ask's sources exclude unrelated documents even when the index holds them
 PASS  POST /ask still answers correctly with unrelated documents in the index
@@ -178,8 +178,39 @@ python test_endpoints.py
 
 `client.py` runs an end-to-end demo against a running server using two
 short facts about Isaac Asimov's science fiction, tagging each document
-with a `source` (`"I, Robot facts"`, `"Foundation facts"`) and printing it
-alongside each result (`python client.py`). `load_squad.py` downloads a small slice of
+with a `source` (`"I, Robot facts"`, `"Foundation facts"`), asking each
+one's defining question (the Three Laws of Robotics; psychohistory), and
+printing the retrieval scores and grounded answer alongside each result:
+
+```
+python client.py
+```
+
+```
+{'status': 'ok', 'documents_stored': 0}
+{'message': 'added', 'total_documents': 1}
+{'message': 'added', 'total_documents': 2}
+
+Q: What are the Three Laws of Robotics?
+   0.8309  (I, Robot facts)  in isaac asimov's i, robot, robots must obey the three laws of robotics : a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.
+   0.4601  (Foundation facts)  in isaac asimov's foundation, the mathematician hari seldon develops psychohistory, a science that predicts the behavior of large populations, and uses it to foresee the collapse of the galactic empire.
+
+Q: What is psychohistory?
+   0.6128  (Foundation facts)  in isaac asimov's foundation, the mathematician hari seldon develops psychohistory, a science that predicts the behavior of large populations, and uses it to foresee the collapse of the galactic empire.
+   0.4116  (I, Robot facts)  in isaac asimov's i, robot, robots must obey the three laws of robotics : a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.
+
+Ask: What are the Three Laws of Robotics?
+Answer: The Three Laws of Robotics, as stated in Isaac Asimov's I, Robot, are:
+
+1. A robot may not injure a human being or, through inaction, allow a human being to come to harm.
+2. A robot must obey the orders given to it by human beings, except where such orders would conflict with the First Law.
+3. A robot must protect its own existence as long as such protection does not conflict with the First or Second Law.
+
+These laws prioritize human safety and well-being over robotic autonomy.
+   source (0.8309, I, Robot facts): in isaac asimov's i, robot, robots must obey the three laws of robotics : a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.
+```
+
+`load_squad.py` downloads a small slice of
 SQuAD (Wikipedia paragraphs paired with real questions and known answers),
 tags each paragraph with a `source` like `"SQuAD: <article title> (paragraph
 N)"`, and checks the server's `/ask` answers against SQuAD's own expected
@@ -218,12 +249,19 @@ python user_testing.py
 ```
 RAG-Pipe user testing -- talking to http://127.0.0.1:8000
 {'status': 'ok', 'documents_stored': 0}
-> add Penguin facts :: Penguins are birds that cannot fly. They swim instead, and an emperor penguin can stand over a metre tall.
+> add I, Robot facts :: In Isaac Asimov's I, Robot, robots must obey the Three Laws of Robotics: a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.
 {'message': 'added', 'total_documents': 1}
-> ask how tall can a penguin get
-  Answer: According to the context, an emperor penguin can stand over a metre tall.
+> ask what are the three laws of robotics
+  Answer: The three laws of robotics, as stated in Isaac Asimov's I, Robot, are:
+
+1. A robot may not injure a human being or, through inaction, allow a human being to come to harm.
+2. A robot must obey the orders given to it by human beings, except where such orders would conflict with the First Law.
+3. A robot must protect its own existence as long as such protection does not conflict with the First or Second Law.
+
+These laws are presented as a set of guidelines for robots to follow in order to maintain their own existence and protect themselves from harm.
+
   Sources:
-    1. [0.7788] (Penguin facts) penguins are birds that cannot fly. they swim instead, and an emperor penguin can stand over a metre tall.
+    1. [0.8351] (I, Robot facts) in isaac asimov's i, robot, robots must obey the three laws of robotics : a robot may not injure a human being, a robot must obey orders from human beings, and a robot must protect its own existence, in that order of priority.
 ```
 
 It also honors `BASE_URL`, so the same tool can be pointed at the
@@ -256,15 +294,19 @@ python user_testing.py
 - Retrieval: cosine similarity over an in-memory list (`TOP_K = 4` for
   `/search`). No persistent database — the index resets whenever the server
   restarts, which is fine at homework scale.
-- `/ask`'s sources are filtered by a relevance floor (`MIN_ASK_SCORE = 0.3`),
+- `/ask`'s sources are filtered by a relevance floor (`MIN_ASK_SCORE = 0.6`),
   not just "whatever the top-k happened to be." Found this the hard way:
   with a fixed top-k and no floor, adding a few unrelated documents (Mount
-  Everest, Python, the Eiffel Tower) alongside the penguin one made `/ask`
-  report those irrelevant chunks as "sources" for a penguin question, *and*
-  the noise in the context made the model wrongly answer "I don't know"
-  even though the correct chunk was right there. Filtering by score before
-  building the prompt fixed both the mislabeled sources and the answer
-  quality. `test_endpoints.py` has a regression check for this.
+  Everest, Python, the Eiffel Tower) alongside the I, Robot one made `/ask`
+  report those irrelevant chunks as "sources" for a Three-Laws question,
+  *and* the noise in the context made the model wrongly answer "I don't
+  know" even though the correct chunk was right there. Filtering by score
+  before building the prompt fixed both the mislabeled sources and the
+  answer quality. `test_endpoints.py` has a regression check for this. (The
+  threshold was recalibrated from `0.3` to `0.6` when the embedding model
+  was swapped to bge-small — its cosine scores run higher for unrelated
+  text than MiniLM's did, so the original floor stopped filtering anything
+  out.)
 - Language model: `llama3.2:1b` via Ollama, run as its own `docker compose`
   service (`ollama`) so the whole stack starts with Docker alone. The
   `rag-server` container reaches it at `http://ollama:11434` over the

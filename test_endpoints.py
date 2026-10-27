@@ -41,8 +41,9 @@ check("GET / reports zero documents after clear", r.json().get("documents_stored
 r1 = requests.post(
     f"{BASE_URL}/add",
     json={
-        "text": "Birds are warm-blooded animals with feathers, and most of them can fly.",
-        "source": "Birds doc",
+        "text": "Robots in science fiction are often depicted with programmed rules "
+        "that constrain their behavior toward humans.",
+        "source": "Robot facts",
     },
 )
 check("POST /add (doc 1) returns 200", r1.status_code == 200, r1.text)
@@ -51,26 +52,27 @@ check("POST /add (doc 1) reports 1 total document", r1.json().get("total_documen
 r2 = requests.post(
     f"{BASE_URL}/add",
     json={
-        "text": "Penguins are birds that cannot fly. They swim instead, and an emperor "
-        "penguin can stand over a metre tall.",
-        "source": "Penguin doc",
+        "text": "In Isaac Asimov's I, Robot, robots must obey the Three Laws of Robotics: "
+        "a robot may not injure a human being, a robot must obey orders from human "
+        "beings, and a robot must protect its own existence, in that order of priority.",
+        "source": "I, Robot facts",
     },
 )
 check("POST /add (doc 2) reports 2 total documents", r2.json().get("total_documents") == 2, r2.text)
 
 # ---- /search ----
-r = requests.post(f"{BASE_URL}/search", json={"query": "How tall can a penguin get?"})
+r = requests.post(f"{BASE_URL}/search", json={"query": "What are the Three Laws of Robotics?"})
 check("POST /search returns 200", r.status_code == 200, r.text)
 results = r.json().get("results", [])
 check("POST /search returns at least one result", len(results) > 0, r.text)
 check(
-    "POST /search's top result is the penguin chunk, not the birds chunk",
-    bool(results) and "penguin" in results[0]["text"].lower(),
+    "POST /search's top result is the I, Robot chunk, not the general robot chunk",
+    bool(results) and "injure" in results[0]["text"].lower(),
     results,
 )
 check(
     "POST /search's top result carries its source tag",
-    bool(results) and results[0].get("source") == "Penguin doc",
+    bool(results) and results[0].get("source") == "I, Robot facts",
     results,
 )
 check(
@@ -80,19 +82,19 @@ check(
 )
 
 # ---- /ask: grounded question (the answer is in the indexed documents) ----
-r = requests.post(f"{BASE_URL}/ask", json={"query": "How tall can a penguin get?"})
+r = requests.post(f"{BASE_URL}/ask", json={"query": "What are the Three Laws of Robotics?"})
 check("POST /ask returns 200", r.status_code == 200, r.text)
 data = r.json()
 answer = data.get("answer", "").lower()
 check(
-    "POST /ask's answer mentions a correct height (metre/meter)",
-    "metre" in answer or "meter" in answer,
+    "POST /ask's answer mentions the First Law (injure/harm)",
+    "injure" in answer or "harm" in answer,
     data,
 )
 check("POST /ask returns non-empty sources", len(data.get("sources", [])) > 0, data)
 check(
-    "POST /ask's top source is the penguin chunk",
-    bool(data.get("sources")) and "penguin" in data["sources"][0]["text"].lower(),
+    "POST /ask's top source is the I, Robot chunk",
+    bool(data.get("sources")) and "injure" in data["sources"][0]["text"].lower(),
     data.get("sources"),
 )
 
@@ -119,17 +121,17 @@ for text, source in [
 ]:
     requests.post(f"{BASE_URL}/add", json={"text": text, "source": source})
 
-r = requests.post(f"{BASE_URL}/ask", json={"query": "How tall can a penguin get?"})
+r = requests.post(f"{BASE_URL}/ask", json={"query": "What are the Three Laws of Robotics?"})
 data = r.json()
 source_texts = " ".join(s["text"].lower() for s in data.get("sources", []))
 check(
     "POST /ask's sources exclude unrelated documents even when the index holds them",
-    "penguin" in source_texts and "everest" not in source_texts and "python" not in source_texts,
+    "injure" in source_texts and "everest" not in source_texts and "python" not in source_texts,
     data.get("sources"),
 )
 check(
     "POST /ask still answers correctly with unrelated documents in the index",
-    "metre" in data.get("answer", "").lower() or "meter" in data.get("answer", "").lower(),
+    "injure" in data.get("answer", "").lower() or "harm" in data.get("answer", "").lower(),
     data,
 )
 

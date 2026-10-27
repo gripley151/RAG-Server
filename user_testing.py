@@ -24,7 +24,7 @@ Commands:
   add [<source> ::] <text>
                   add a document (it gets chunked + embedded server-side),
                   optionally tagged with a source name, e.g.:
-                  add Wikipedia: Penguin :: Penguins are birds that cannot fly.
+                  add Wikipedia: Foundation :: Hari Seldon develops psychohistory.
   search <query>  show the stored chunks closest to a query, with scores and sources
   ask <query>     ask a question; the model answers from retrieved chunks
   status          show server health and how many chunks are stored
